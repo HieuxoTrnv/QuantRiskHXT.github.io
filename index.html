@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="RiskLab Trader - Monte Carlo, quản lý rủi ro, drawdown và risk of ruin">
+<title>RiskLab Trader — Risk Management & Monte Carlo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="brand"><div class="brand-mark">RL</div><div><strong>RISKLAB</strong><span>TRADER</span></div></div>
+  <nav><a href="#dashboard">Dashboard</a><a href="#montecarlo">Monte Carlo</a><a href="#calculators">Calculators</a><a href="#education">Risk Guide</a></nav>
+  <button class="theme-btn" id="themeBtn" title="Đổi giao diện">☾</button>
+</header>
+<main>
+<section class="hero" id="dashboard">
+ <div class="hero-copy"><div class="eyebrow">TRADING RISK ANALYTICS</div><h1>Biến rủi ro thành<br><em>dữ liệu có thể đo lường.</em></h1><p>Mô phỏng hàng nghìn kịch bản giao dịch để hiểu drawdown, chuỗi thua, xác suất lợi nhuận và rủi ro phá sản trước khi bạn đặt lệnh.</p><a class="primary" href="#montecarlo">Bắt đầu mô phỏng <span>→</span></a></div>
+ <div class="hero-stats"><div><b id="heroWR">50%</b><span>Win rate mẫu</span></div><div><b id="heroRR">2.0R</b><span>Reward / Risk</span></div><div><b id="heroRisk">1%</b><span>Risk / trade</span></div></div>
+</section>
+
+<section class="workspace" id="montecarlo">
+ <div class="section-head"><div><div class="eyebrow">01 / MONTE CARLO</div><h2>Monte Carlo Simulator</h2><p>Tạo nhiều đường đi ngẫu nhiên dựa trên các tham số giao dịch của bạn.</p></div><button class="secondary" id="randomizeBtn">↻ Randomize</button></div>
+ <div class="grid-layout">
+  <aside class="panel controls">
+   <div class="panel-title">THAM SỐ MÔ PHỎNG</div>
+   <label>Vốn ban đầu <input id="capital" type="number" value="100000" min="100" step="100"></label>
+   <div class="two"><label>Win rate (%)<input id="winRate" type="number" value="50" min="1" max="99" step="1"></label><label>Risk / trade (%)<input id="riskPct" type="number" value="1" min="0.05" max="50" step="0.05"></label></div>
+   <div class="two"><label>Reward / Risk<input id="rr" type="number" value="2" min="0.1" max="20" step="0.1"></label><label>Số giao dịch<input id="trades" type="number" value="100" min="1" max="5000"></label></div>
+   <label>Số lần mô phỏng <select id="sims"><option value="1000">1,000</option><option value="5000">5,000</option><option value="10000" selected>10,000</option><option value="25000">25,000</option><option value="50000">50,000</option></select></label>
+   <label class="check"><input id="compounding" type="checkbox" checked><span>Risk theo % vốn hiện tại (compounding)</span></label>
+   <div class="limits"><div><label>Max drawdown (%)<input id="maxDD" type="number" value="50" min="1" max="99"></label></div><div><label>Daily loss limit (%)<input id="dailyLoss" type="number" value="0" min="0" max="99"></label></div></div>
+   <button class="run" id="runBtn">▶ CHẠY MÔ PHỎNG</button>
+   <small>Monte Carlo là mô hình xác suất, không dự báo kết quả thị trường thực tế.</small>
+  </aside>
+  <div class="results">
+   <div class="metric-grid">
+    <div class="metric"><span>Median Ending</span><b id="mMedian">—</b><small id="mReturn">—</small></div>
+    <div class="metric"><span>Best 5%</span><b id="mP95">—</b><small>95th percentile</small></div>
+    <div class="metric"><span>Worst 5%</span><b id="mP05">—</b><small>5th percentile</small></div>
+    <div class="metric"><span>Probability of Profit</span><b id="mProfit">—</b><small id="mLoss">—</small></div>
+    <div class="metric"><span>Median Max DD</span><b id="mDD">—</b><small>trên các kịch bản</small></div>
+    <div class="metric"><span>Max Losing Streak</span><b id="mStreak">—</b><small>trong mô phỏng</small></div>
+   </div>
+   <div class="chart-card"><div class="chart-title"><strong>Equity Curves</strong><span id="curveLegend">Các đường mẫu + median</span></div><div class="chart-wrap"><canvas id="equityChart"></canvas></div></div>
+   <div class="lower-charts"><div class="chart-card"><div class="chart-title"><strong>Phân phối Ending Balance</strong></div><div class="chart-wrap small"><canvas id="histChart"></canvas></div></div><div class="chart-card"><div class="chart-title"><strong>Phân phối Max Drawdown</strong></div><div class="chart-wrap small"><canvas id="ddChart"></canvas></div></div></div>
+  </div>
+ </div>
+</section>
+
+<section class="risk-section" id="calculators">
+ <div class="section-head"><div><div class="eyebrow">02 / RISK TOOLS</div><h2>Risk Calculators</h2></div></div>
+ <div class="cards3">
+  <div class="tool-card"><h3>Position Size</h3><div class="two"><label>Account<input id="psCapital" type="number" value="100000"></label><label>Risk %<input id="psRisk" type="number" value="1" step="0.1"></label></div><div class="two"><label>Stop loss (pips)<input id="psSL" type="number" value="50"></label><label>Pip value / lot<input id="psPip" type="number" value="10" step="0.01"></label></div><div class="answer"><span>Risk amount</span><b id="riskAmount">$1,000.00</b></div><div class="answer"><span>Position size</span><b id="positionSize">2.00 lots</b></div></div>
+  <div class="tool-card"><h3>Drawdown Recovery</h3><label>Drawdown<input id="ddInput" type="number" value="20" min="0" max="99" step="1"></label><div class="recovery"><div><span>Vốn còn lại</span><b id="ddRemain">80%</b></div><div><span>Lợi nhuận cần hồi phục</span><b id="ddRecover">25%</b></div></div><div class="dd-bar"><i id="ddBar"></i></div><small>Ví dụ: giảm 20% cần tăng 25% trên vốn còn lại để về điểm hòa vốn.</small></div>
+  <div class="tool-card"><h3>Expectancy</h3><div class="two"><label>Win rate %<input id="exWR" type="number" value="50"></label><label>Loss rate %<input id="exLR" type="number" value="50"></label></div><div class="two"><label>Avg win (R)<input id="exWin" type="number" value="2" step="0.1"></label><label>Avg loss (R)<input id="exLoss" type="number" value="1" step="0.1"></label></div><div class="answer"><span>Expectancy / trade</span><b id="expectancy">+0.50R</b></div><small>Công thức: Win% × Avg Win − Loss% × Avg Loss.</small></div>
+ </div>
+</section>
+
+<section class="risk-section">
+ <div class="section-head"><div><div class="eyebrow">03 / PROBABILITY</div><h2>Risk of Ruin & Losing Streak</h2></div></div>
+ <div class="cards2">
+  <div class="tool-card large"><div class="inline-head"><h3>Risk of Ruin</h3><button class="mini" id="ruinRun">Tính lại</button></div><p class="muted">Xác suất một đường mô phỏng chạm ngưỡng drawdown đã đặt trong thời gian mô phỏng.</p><div class="ruin-grid"><div><span>Chạm -10%</span><b id="ruin10">—</b></div><div><span>Chạm -20%</span><b id="ruin20">—</b></div><div><span>Chạm -30%</span><b id="ruin30">—</b></div><div><span>Chạm -50%</span><b id="ruin50">—</b></div></div></div>
+  <div class="tool-card large"><div class="inline-head"><h3>Losing Streak</h3><span class="tag">10,000 paths</span></div><div class="streak-table"><div><span>≥ 3 losses</span><b id="s3">—</b></div><div><span>≥ 5 losses</span><b id="s5">—</b></div><div><span>≥ 7 losses</span><b id="s7">—</b></div><div><span>≥ 9 losses</span><b id="s9">—</b></div><div><span>≥ 12 losses</span><b id="s12">—</b></div></div></div>
+ </div>
+</section>
+
+<section class="risk-section">
+ <div class="section-head"><div><div class="eyebrow">04 / TRADE JOURNAL</div><h2>Equity Curve Simulator</h2><p>Nhập chuỗi kết quả theo R để xem đường vốn thực tế của một hệ thống.</p></div></div>
+ <div class="journal panel"><label>Chuỗi giao dịch (R)<textarea id="tradeInput">2, -1, -1, 2, 2, -1, 2, -1, 2, -1, -1, 2, 2, -1, 2</textarea></label><button class="run smallrun" id="journalBtn">VẼ EQUITY CURVE</button></div>
+ <div class="chart-card journal-chart"><div class="chart-wrap"><canvas id="journalChart"></canvas></div><div class="journal-stats" id="journalStats"></div></div>
+</section>
+
+<section class="risk-section" id="education">
+ <div class="section-head"><div><div class="eyebrow">05 / RISK GUIDE</div><h2>Kiến thức quản lý rủi ro</h2></div></div>
+ <div class="guide-grid"><article><span>01</span><h3>Risk per trade</h3><p>Rủi ro mỗi giao dịch là số tiền bạn chấp nhận mất nếu kịch bản SL xảy ra. Có thể biểu diễn bằng số tiền cố định hoặc phần trăm vốn.</p></article><article><span>02</span><h3>Drawdown</h3><p>Drawdown đo mức sụt giảm từ đỉnh vốn xuống đáy trước khi tạo đỉnh mới. Cùng một mức lỗ danh nghĩa nhưng tỷ lệ hồi phục cần thiết sẽ tăng khi tài khoản giảm sâu.</p></article><article><span>03</span><h3>Reward / Risk</h3><p>R:R mô tả phần thưởng mục tiêu so với số tiền rủi ro. Một hệ thống có thể có win rate thấp nhưng expectancy dương nếu lợi nhuận trung bình đủ lớn.</p></article><article><span>04</span><h3>Monte Carlo</h3><p>Mô phỏng lại nhiều chuỗi thắng/thua ngẫu nhiên từ cùng một bộ tham số để quan sát phạm vi kết quả có thể xảy ra, thay vì chỉ nhìn một đường equity.</p></article></div>
+ <div class="disclaimer"><strong>⚠ Lưu ý</strong> Công cụ này phục vụ mục đích giáo dục và mô phỏng. Kết quả phụ thuộc hoàn toàn vào giả định đầu vào; dữ liệu lịch sử hoặc mô phỏng không đảm bảo kết quả tương lai.</div>
+</section>
+</main>
+<footer><div class="brand"><div class="brand-mark">RL</div><strong>RISKLAB TRADER</strong></div><span>© 2026 — Risk analytics for traders.</span></footer>
+</div>
+<script src="script.js"></script><script>lucide.createIcons();</script>
+</body></html>
