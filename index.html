@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="RiskLab Hiếu Xoăn Trader - Mô phỏng Monte Carlo, quản lý rủi ro và phân tích Winrate / Risk Reward cho giao dịch cổ phiếu Việt Nam." />
+  <meta name="theme-color" content="#0b1220" />
+  <title>RiskLab Hiếu Xoăn Trader</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#08111f;
+      --panel:#0f1b2d;
+      --panel2:#132238;
+      --line:#263a55;
+      --text:#edf4ff;
+      --muted:#9fb1c8;
+      --green:#28d17c;
+      --red:#ff5c6c;
+      --blue:#4ea1ff;
+      --yellow:#f6c85f;
+      --cyan:#36d9e7;
+      --shadow:0 14px 40px rgba(0,0,0,.24);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(78,161,255,.12), transparent 28%),
+        radial-gradient(circle at 85% 0%, rgba(40,209,124,.08), transparent 25%),
+        var(--bg);
+      line-height:1.5;
+    }
+    a{color:inherit}
+    .wrap{max-width:1400px;margin:auto;padding:0 22px}
+    header{
+      position:sticky;top:0;z-index:20;
+      backdrop-filter:blur(16px);
+      background:rgba(8,17,31,.82);
+      border-bottom:1px solid rgba(255,255,255,.07)
+    }
+    .nav{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:900;letter-spacing:.2px}
+    .logo{
+      width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--blue),var(--green));
+      color:#06101c;font-weight:1000;
+      box-shadow:0 8px 24px rgba(78,161,255,.2)
+    }
+    .brand span{font-size:19px}
+    nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    nav a{
+      text-decoration:none;color:var(--muted);padding:9px 12px;border-radius:10px;font-size:14px
+    }
+    nav a:hover{background:rgba(255,255,255,.06);color:var(--text)}
+    .hero{padding:54px 0 28px}
+    .hero-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:22px;align-items:stretch}
+    .hero-card,.panel{
+      background:linear-gradient(180deg,rgba(19,34,56,.95),rgba(15,27,45,.95));
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)
+    }
+    .hero-card{padding:34px}
+    .eyebrow{color:var(--cyan);font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:1.3px}
+    h1{font-size:clamp(32px,5vw,58px);line-height:1.02;margin:10px 0 16px}
+    .hero p{color:var(--muted);font-size:17px;max-width:820px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      border:0;border-radius:11px;padding:11px 16px;font-weight:800;text-decoration:none;cursor:pointer;
+      background:#20344f;color:var(--text)
+    }
+    .btn.primary{background:var(--green);color:#06110b}
+    .btn.blue{background:var(--blue);color:#06101c}
+    .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .mini-stat{padding:24px;display:flex;flex-direction:column;justify-content:center}
+    .mini-stat .big{font-size:38px;font-weight:950;margin:6px 0}
+    .mini-stat p{margin:0;color:var(--muted)}
+    section{padding:18px 0 10px}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:0 0 14px}
+    .section-title h2{margin:0;font-size:25px}
+    .section-title p{margin:0;color:var(--muted);font-size:14px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .panel{padding:20px}
+    .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-7{grid-column:span 7}.span-6{grid-column:span 6}.span-5{grid-column:span 5}.span-4{grid-column:span 4}.span-3{grid-column:span 3}
+    .controls{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .field{display:flex;flex-direction:column;gap:7px}
+    label{font-size:13px;font-weight:800;color:#c9d7e9}
+    input,select{
+      width:100%;padding:12px 13px;border-radius:10px;border:1px solid #304660;
+      background:#0a1525;color:var(--text);outline:none;font-size:15px
+    }
+    input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(78,161,255,.12)}
+    .hint{font-size:12px;color:var(--muted)}
+    .input-row{display:flex;gap:8px}.input-row input{flex:1}
+    .run-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}
+    .status{font-size:13px;color:var(--muted)}
+    .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .metric{background:#0a1525;border:1px solid #263a55;border-radius:12px;padding:14px}
+    .metric .k{color:var(--muted);font-size:12px}.metric .v{font-size:22px;font-weight:900;margin-top:4px}
+    .positive{color:var(--green)!important}.negative{color:var(--red)!important}.accent{color:var(--blue)!important}
+    .chart-wrap{position:relative;height:370px}
+    .chart-wrap.short{height:300px}
+    .chart-wrap.tall{height:430px}
+    .legend-note{font-size:12px;color:var(--muted);margin-top:9px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right}
+    th:first-child,td:first-child{text-align:left}
+    th{color:#cbd8e8;background:#0a1525;position:sticky;top:0}
+    .table-scroll{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:11px}
+    .pill{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900;background:#1d314b}
+    .pill.green{background:rgba(40,209,124,.14);color:var(--green)}
+    .pill.red{background:rgba(255,92,108,.14);color:var(--red)}
+    .callout{border-left:3px solid var(--yellow);background:rgba(246,200,95,.06);padding:12px 14px;border-radius:8px;color:#d9e3ef;font-size:13px}
+    .formula{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#08111f;border:1px solid var(--line);padding:11px;border-radius:10px;color:#cfe1f8;overflow:auto}
+    footer{padding:36px 0 60px;color:var(--muted);font-size:13px}
+    .footer-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .footer-links a{color:#cfe1f8;text-decoration:none}
+    .footer-links a:hover{text-decoration:underline}
+    @media(max-width:1100px){
+      .hero-grid{grid-template-columns:1fr}
+      .controls{grid-template-columns:repeat(2,1fr)}
+      .metrics{grid-template-columns:repeat(3,1fr)}
+      .span-8,.span-7,.span-6,.span-5,.span-4,.span-3{grid-column:span 12}
+    }
+    @media(max-width:650px){
+      .wrap{padding:0 12px}
+      .nav{align-items:flex-start;padding:12px 0}
+      nav{display:none}
+      .hero-card{padding:24px}
+      .controls{grid-template-columns:1fr}
+      .metrics{grid-template-columns:repeat(2,1fr)}
+      .run-row{align-items:stretch;flex-direction:column}
+      .chart-wrap{height:300px}
+      .chart-wrap.tall{height:360px}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#">
+      <div class="logo">RX</div>
+      <span>RiskLab Hiếu Xoăn Trader</span>
+    </a>
+    <nav>
+      <a href="#mo-phong">Monte Carlo</a>
+      <a href="#rr">Winrate / R:R</a>
+      <a href="#hoi-phuc">Hồi phục vốn</a>
+      <a href="#phan-phoi">Phân phối</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div class="hero-grid">
+      <div class="hero-card">
+        <div class="eyebrow">Risk management • Monte Carlo • Cổ phiếu Việt Nam</div>
+        <h1>RiskLab Hiếu Xoăn Trader</h1>
+        <p>
+          Bộ mô phỏng xác suất dành cho nhà giao dịch cổ phiếu Việt Nam:
+          mô phỏng đường cong vốn, chuỗi thắng/thua, Drawdown, Profit Factor,
+          Expectancy, mối liên hệ Winrate – Risk/Reward và khả năng hồi phục vốn.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#mo-phong">Bắt đầu mô phỏng</a>
+          <a class="btn blue" href="https://www.youtube.com/@HieuXoanTrader" target="_blank" rel="noopener">YouTube Hiếu Xoăn Trader</a>
+          <a class="btn" href="https://openaccount.vps.com.vn/open-account?MktID=B033" target="_blank" rel="noopener">Mở Tài Khoản VPS</a>
+          <a class="btn" href="https://hieuxotrnv.github.io/" target="_blank" rel="noopener">Giật Jackpot</a>
+        </div>
+      </div>
+      <div class="panel mini-stat">
+        <div class="eyebrow">Nguyên tắc tính</div>
+        <div class="big">VND • R:R</div>
+        <p>Không dùng pip. Rủi ro được quy đổi trực tiếp theo % vốn hoặc số tiền VND cho mỗi giao dịch.</p>
+        <div class="formula" style="margin-top:18px">Expectancy (R) = Winrate × R:R − Lossrate × 1R</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="mo-phong">
+    <div class="wrap">
+      <div class="section-title">
+        <div>
+          <h2>1. Mô phỏng Monte Carlo</h2>
+          <p>Mỗi mô phỏng tạo một chuỗi kết quả ngẫu nhiên; chỉ đường cong vốn được chọn mới dùng để tính chuỗi thua dài nhất.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="controls">
+          <div class="field">
+            <label for="capital">Vốn ban đầu (VND)</label>
+            <input id="capital" inputmode="numeric" value="100000000" />
+            <div class="hint">Tự động thêm dấu phân cách hàng nghìn.</div>
+          </div>
+          <div class="field">
+            <label for="winrate">Tỷ lệ thắng (%)</label>
+            <input id="winrate" type="number" min="0" max="100" step="0.1" value="50" />
+            <div class="hint">Tỷ lệ lỗ luôn = 100% − tỷ lệ thắng.</div>
+          </div>
+          <div class="field">
+            <label for="rr">Risk / Reward (R:R)</label>
+            <input id="rr" type="number" min="0.01" max="100" step="0.01" value="2" />
+            <div class="hint">Ví dụ 2 = thắng +2R, thua −1R.</div>
+          </div>
+          <div class="field">
+            <label for="riskMode">Cách tính rủi ro</label>
+            <select id="riskMode">
+              <option value="percent">% vốn mỗi giao dịch</option>
+              <option value="fixed">Cố định theo VND</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="riskPct">Rủi ro mỗi giao dịch (%)</label>
+            <input id="riskPct" type="number" min="0.01" max="100" step="0.1" value="1" />
+            <div class="hint">Dùng khi chọn rủi ro theo % vốn.</div>
+          </div>
+          <div class="field">
+            <label for="riskVnd">Rủi ro cố định (VND)</label>
+            <input id="riskVnd" inputmode="numeric" value="1000000" />
+            <div class="hint">Dùng khi chọn rủi ro cố định.</div>
+          </div>
+          <div class="field">
+            <label for="trades">Số giao dịch / mô phỏng</label>
+            <input id="trades" type="number" min="1" max="2000" step="1" value="100" />
+            <div class="hint">Tối đa 2.000 giao dịch cho một đường cong.</div>
+          </div>
+          <div class="field">
+            <label for="sims">Số lần mô phỏng</label>
+            <input id="sims" type="number" min="1" max="10000" step="1" value="1000" />
+            <div class="hint">Tối đa <b>10.000</b> lần.</div>
+          </div>
+        </div>
+
+        <div class="run-row">
+          <div class="status" id="status">Sẵn sàng mô phỏng.</div>
+          <button class="btn primary" id="runBtn">▶ Chạy Monte Carlo</button>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:14px">
+        <div class="panel span-12">
+          <div class="metrics">
+            <div class="metric"><div class="k">Tỷ lệ thắng</div><div class="v accent" id="mWinrate">50%</div></div>
+            <div class="metric"><div class="k">Tỷ lệ lỗ</div><div class="v negative" id="mLossrate">50%</div></div>
+            <div class="metric"><div class="k">Expectancy</div><div class="v" id="mExpectancy">+0.50R</div></div>
+            <div class="metric"><div class="k">Profit Factor</div><div class="v" id="mPF">2.00</div></div>
+            <div class="metric"><div class="k">Rủi ro / giao dịch</div><div class="v" id="mRisk">1.000.000 đ</div></div>
+          </div>
+        </div>
+
+        <div class="panel span-8">
+          <div class="section-title">
+            <div><h2>Đường cong vốn</h2><p>Hiển thị 1 equity duy nhất, đúng yêu cầu tính chuỗi thua dài nhất trên 1 đường cong vốn.</p></div>
+          </div>
+          <div class="chart-wrap tall"><canvas id="equityChart"></canvas></div>
+          <div class="legend-note" id="equityNote"></div>
+        </div>
+
+        <div class="panel span-4">
+          <div class="section-title">
+            <div><h2>Kết quả mô phỏng</h2><p>Thống kê trên toàn bộ số lần mô phỏng.</p></div>
+          </div>
+          <table>
+            <tbody>
+              <tr><td>Vốn ban đầu</td><td id="rStart">—</td></tr>
+              <tr><td>Vốn trung bình cuối kỳ</td><td id="rAvgEnd">—</td></tr>
+              <tr><td>Lợi nhuận trung bình</td><td id="rAvgProfit">—</td></tr>
+              <tr><td>Tỷ suất sinh lời trung bình</td><td id="rAvgReturn">—</td></tr>
+              <tr><td>Drawdown lớn nhất của equity</td><td id="rMaxDD">—</td></tr>
+              <tr><td>Chuỗi thua dài nhất của equity</td><td id="rLoseStreak">—</td></tr>
+              <tr><td>Chuỗi thắng dài nhất của equity</td><td id="rWinStreak">—</td></tr>
+              <tr><td>Hồi phục cần thiết từ DD lớn nhất</td><td id="rRecovery">—</td></tr>
+              <tr><td>Số lần mô phỏng</td><td id="rSims">—</td></tr>
+            </tbody>
+          </table>
+          <div class="callout" style="margin-top:12px">
+            Chuỗi thua/thắng ở đây là của <b>đường cong vốn đang hiển thị</b>, không lấy chuỗi dài nhất của 10.000 mô phỏng cộng lại.
+          </div>
+        </div>
+
+        <div class="panel span-12">
+          <div class="section-title">
+            <div><h2>Chuỗi thắng / thua theo bảng tham chiếu</h2><p>Dựa trên bảng 100 mẫu bạn cung cấp. Các dấu “−” trong ảnh được hiểu là độ dài chuỗi thắng dương.</p></div>
+          </div>
+          <div class="table-scroll">
+            <table id="streakTable">
+              <thead><tr><th>Tỷ lệ thắng</th><th>Chuỗi thua tham chiếu</th><th>Chuỗi thắng tham chiếu</th><th>Xác suất 1 chuỗi thua dài L</th><th>Xác suất 1 chuỗi thắng dài L</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rr">
+    <div class="wrap">
+      <div class="section-title">
+        <div>
+          <h2>2. Mối liên hệ giữa Winrate và Risk / Reward</h2>
+          <p>Winrate hòa vốn lý thuyết = 1 / (1 + R:R), chưa tính phí, thuế, trượt giá hoặc chênh lệch giá.</p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="panel span-8">
+          <div class="chart-wrap"><canvas id="rrChart"></canvas></div>
+        </div>
+        <div class="panel span-4">
+          <h3>R:R đang chọn</h3>
+          <div class="metric" style="margin:12px 0">
+            <div class="k">Winrate hòa vốn</div>
+            <div class="v accent" id="breakevenWinrate">33.33%</div>
+          </div>
+          <div class="metric">
+            <div class="k">Winrate hiện tại</div>
+            <div class="v" id="currentWinrate">50%</div>
+          </div>
+          <div class="formula" style="margin-top:14px">Winrate hòa vốn = 1 ÷ (1 + R:R)</div>
+          <p class="hint">Ví dụ R:R = 2 thì winrate hòa vốn ≈ 33,33%. Đây là quan hệ toán học của mô hình 1R thua / RR thắng, không phải cam kết lợi nhuận.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hoi-phuc">
+    <div class="wrap">
+      <div class="section-title">
+        <div>
+          <h2>3. Khả năng hồi phục vốn sau khi lỗ</h2>
+          <p>Khoản lỗ càng lớn thì % lợi nhuận cần thiết trên phần vốn còn lại càng tăng nhanh.</p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="panel span-7">
+          <div class="chart-wrap"><canvas id="recoveryChart"></canvas></div>
+        </div>
+        <div class="panel span-5">
+          <div class="table-scroll" style="max-height:360px">
+            <table id="recoveryTable">
+              <thead><tr><th>Drawdown</th><th>Lợi nhuận cần để hòa vốn</th><th>Vốn còn lại</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="callout" style="margin-top:12px">
+            Công thức: <b>Lợi nhuận cần thiết = DD / (1 − DD)</b>. Ví dụ lỗ 50% cần tăng 100% từ phần vốn còn lại để quay lại điểm hòa vốn.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="phan-phoi">
+    <div class="wrap">
+      <div class="section-title">
+        <div>
+          <h2>4. Phân phối lợi nhuận và phân phối rủi ro</h2>
+          <p>Hai biểu đồ này lấy dữ liệu trực tiếp từ toàn bộ các mô phỏng vừa chạy.</p>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="panel span-6">
+          <div class="section-title"><div><h2>Phân phối lợi nhuận cuối kỳ</h2><p>Histogram của lợi nhuận % trên vốn ban đầu.</p></div></div>
+          <div class="chart-wrap short"><canvas id="profitDistChart"></canvas></div>
+        </div>
+        <div class="panel span-6">
+          <div class="section-title"><div><h2>Phân phối rủi ro / Drawdown</h2><p>Histogram Drawdown lớn nhất của từng mô phỏng.</p></div></div>
+          <div class="chart-wrap short"><canvas id="riskDistChart"></canvas></div>
+        </div>
+        <div class="panel span-12">
+          <div class="section-title"><div><h2>Thống kê phân vị</h2><p>Giúp nhìn phạm vi kết quả thay vì chỉ nhìn một kịch bản.</p></div></div>
+          <div class="metrics">
+            <div class="metric"><div class="k">Lợi nhuận P5</div><div class="v" id="p5">—</div></div>
+            <div class="metric"><div class="k">Lợi nhuận P25</div><div class="v" id="p25">—</div></div>
+            <div class="metric"><div class="k">Lợi nhuận P50</div><div class="v" id="p50">—</div></div>
+            <div class="metric"><div class="k">Lợi nhuận P75</div><div class="v" id="p75">—</div></div>
+            <div class="metric"><div class="k">Lợi nhuận P95</div><div class="v" id="p95">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h2>Lưu ý mô hình</h2>
+            <p>Mô phỏng xác suất không phải dự báo thị trường.</p>
+          </div>
+        </div>
+        <ul style="color:var(--muted);font-size:14px">
+          <li>Kết quả giả định mỗi giao dịch độc lập và chỉ có hai trạng thái thắng/thua theo Winrate nhập vào.</li>
+          <li>R:R được giữ nguyên theo yêu cầu; thắng = +R:R × rủi ro, thua = −1R.</li>
+          <li>Phí giao dịch, thuế, trượt giá, thanh khoản, gap và thay đổi R:R thực tế chưa được mô hình hóa.</li>
+          <li>Với cổ phiếu Việt Nam, phần “pip” đã được loại bỏ; rủi ro được thể hiện bằng % vốn và VND.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <b>RiskLab Hiếu Xoăn Trader</b> — công cụ mô phỏng quản lý rủi ro cho mục đích giáo dục và nghiên cứu.
+    <div class="footer-links">
+      <a href="https://www.youtube.com/@HieuXoanTrader" target="_blank" rel="noopener">YouTube Hiếu Xoăn Trader</a>
+      <a href="https://openaccount.vps.com.vn/open-account?MktID=B033" target="_blank" rel="noopener">Mở Tài Khoản VPS</a>
+      <a href="https://hieuxotrnv.github.io/" target="_blank" rel="noopener">Giật Jackpot</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  const streakReference = [
+    [10,44,2],[20,21,3],[30,13,4],[35,11,4],[40,9,5],[45,8,6],
+    [50,7,7],[55,6,8],[60,5,9],[65,4,11],[70,4,13],[75,3,16],
+    [80,3,21],[85,2,28],[90,2,44],[95,2,90],[99,1,458]
+  ];
+
+  const $ = id => document.getElementById(id);
+  let equityChart, rrChart, recoveryChart, profitDistChart, riskDistChart;
+  let lastSimulation = null;
+
+  const moneyFmt = new Intl.NumberFormat("vi-VN", {maximumFractionDigits:0});
+  const numFmt = new Intl.NumberFormat("vi-VN", {maximumFractionDigits:2});
+  const pctFmt = v => `${numFmt.format(v)}%`;
+  const money = v => `${moneyFmt.format(v)} đ`;
+
+  function parseMoney(value) {
+    const cleaned = String(value).replace(/[^\d]/g, "");
+    return Number(cleaned || 0);
+  }
+
+  function formatMoneyInput(input) {
+    const n = parseMoney(input.value);
+    input.value = n ? moneyFmt.format(n) : "";
+  }
+
+  function clamp(v,min,max){ return Math.min(max, Math.max(min,v)); }
+
+  function getInputs() {
+    let capital = parseMoney($("capital").value);
+    let winrate = clamp(Number($("winrate").value) || 0, 0, 100);
+    let rr = Math.max(Number($("rr").value) || 0, 0.01);
+    let riskPct = clamp(Number($("riskPct").value) || 0, 0.01, 100);
+    let riskVnd = parseMoney($("riskVnd").value);
+    let trades = clamp(Math.round(Number($("trades").value) || 1), 1, 2000);
+    let sims = clamp(Math.round(Number($("sims").value) || 1), 1, 10000);
+    if (capital <= 0) capital = 100000000;
+    return {capital, winrate, lossrate:100-winrate, rr, riskPct, riskVnd, trades, sims, riskMode:$("riskMode").value};
+  }
+
+  function riskAmount(equity, p) {
+    return p.riskMode === "fixed" ? p.riskVnd : equity * p.riskPct / 100;
+  }
+
+  function calcMetrics(p) {
+    const w = p.winrate / 100, l = p.lossrate / 100;
+    const expectancyR = w * p.rr - l;
+    const pf = l === 0 ? Infinity : (w * p.rr) / l;
+    return {w,l,expectancyR,pf};
+  }
+
+  function formatSignedMoney(v) {
+    return `${v >= 0 ? "+" : ""}${money(v)}`;
+  }
+
+  function calcStreaks(path) {
+    let loss=0, win=0, maxLoss=0, maxWin=0;
+    for(let i=1;i<path.length;i++){
+      const delta = path[i]-path[i-1];
+      if(delta < 0){ loss++; win=0; maxLoss=Math.max(maxLoss,loss); }
+      else if(delta > 0){ win++; loss=0; maxWin=Math.max(maxWin,win); }
+    }
+    return {maxLoss,maxWin};
+  }
+
+  function maxDrawdown(path) {
+    let peak = path[0], maxDD = 0;
+    for(const v of path){
+      if(v > peak) peak = v;
+      if(peak > 0) maxDD = Math.max(maxDD, (peak-v)/peak);
+    }
+    return maxDD;
+  }
+
+  function quantile(arr,q){
+    if(!arr.length) return 0;
+    const a = [...arr].sort((x,y)=>x-y);
+    const pos=(a.length-1)*q;
+    const base=Math.floor(pos), rest=pos-base;
+    return a[base+1] === undefined ? a[base] : a[base] + rest*(a[base+1]-a[base]);
+  }
+
+  function binData(values, binCount=18) {
+    if(!values.length) return {labels:[],counts:[]};
+    let min=Math.min(...values), max=Math.max(...values);
+    if(min===max){ min-=1; max+=1; }
+    const width=(max-min)/binCount;
+    const counts=Array(binCount).fill(0);
+    for(const v of values){
+      let i=Math.floor((v-min)/width);
+      if(i>=binCount) i=binCount-1;
+      if(i<0) i=0;
+      counts[i]++;
+    }
+    const labels=counts.map((_,i)=>{
+      const a=min+i*width, b=a+width;
+      return `${numFmt.format(a)}–${numFmt.format(b)}`;
+    });
+    return {labels,counts};
+  }
+
+  function chartBaseOptions(yTitle="", xTitle="") {
+    return {
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:350},
+      plugins:{
+        legend:{labels:{color:"#cbd8e8"}},
+        tooltip:{callbacks:{}}
+      },
+      scales:{
+        x:{ticks:{color:"#9fb1c8",maxRotation:0},grid:{color:"rgba(255,255,255,.07)"},title:{display:!!xTitle,text:xTitle,color:"#9fb1c8"}},
+        y:{ticks:{color:"#9fb1c8"},grid:{color:"rgba(255,255,255,.07)"},title:{display:!!yTitle,text:yTitle,color:"#9fb1c8"}}
+      }
+    };
+  }
+
+  function destroy(c){ if(c) c.destroy(); }
+
+  function updateBasicMetrics(p) {
+    const m=calcMetrics(p);
+    $("mWinrate").textContent=pctFmt(p.winrate);
+    $("mLossrate").textContent=pctFmt(p.lossrate);
+    $("mExpectancy").textContent=`${m.expectancyR>=0?"+":""}${numFmt.format(m.expectancyR)}R`;
+    $("mExpectancy").className=`v ${m.expectancyR>=0?"positive":"negative"}`;
+    $("mPF").textContent=Number.isFinite(m.pf)?numFmt.format(m.pf):"∞";
+    $("mRisk").textContent=p.riskMode==="fixed"?money(p.riskVnd):money(p.capital*p.riskPct/100);
+    $("breakevenWinrate").textContent=pctFmt(100/(1+p.rr));
+    $("currentWinrate").textContent=pctFmt(p.winrate);
+  }
+
+  function runMonteCarlo() {
+    const p=getInputs();
+    updateBasicMetrics(p);
+    $("status").textContent=`Đang chạy ${moneyFmt.format(p.sims)} mô phỏng × ${moneyFmt.format(p.trades)} giao dịch...`;
+    const start=performance.now();
+
+    const selected=[p.capital];
+    const terminal=[], returns=[], dds=[];
+    let current=p.capital;
+
+    // First simulation becomes the single equity curve displayed.
+    for(let t=0;t<p.trades;t++){
+      const risk=riskAmount(current,p);
+      const win=Math.random() < p.winrate/100;
+      current=Math.max(0, current + (win ? risk*p.rr : -risk));
+      selected.push(current);
+    }
+    const selectedStreak=calcStreaks(selected);
+    const selectedDD=maxDrawdown(selected);
+
+    terminal.push(current);
+    returns.push((current/p.capital-1)*100);
+    dds.push(selectedDD*100);
+
+    for(let s=1;s<p.sims;s++){
+      let eq=p.capital, peak=eq, dd=0;
+      for(let t=0;t<p.trades;t++){
+        const risk=riskAmount(eq,p);
+        const win=Math.random() < p.winrate/100;
+        eq=Math.max(0, eq + (win ? risk*p.rr : -risk));
+        if(eq>peak) peak=eq;
+        if(peak>0) dd=Math.max(dd,(peak-eq)/peak);
+      }
+      terminal.push(eq);
+      returns.push((eq/p.capital-1)*100);
+      dds.push(dd*100);
+    }
+
+    lastSimulation={p,selected,selectedStreak,selectedDD,terminal,returns,dds};
+
+    const avgEnd=terminal.reduce((a,b)=>a+b,0)/terminal.length;
+    const avgProfit=avgEnd-p.capital;
+    const avgReturn=returns.reduce((a,b)=>a+b,0)/returns.length;
+    const maxDDAcross=Math.max(...dds);
+    const recovery= maxDDAcross>=100 ? Infinity : maxDDAcross/(100-maxDDAcross)*100;
+
+    $("rStart").textContent=money(p.capital);
+    $("rAvgEnd").textContent=money(avgEnd);
+    $("rAvgProfit").textContent=formatSignedMoney(avgProfit);
+    $("rAvgProfit").className=avgProfit>=0?"positive":"negative";
+    $("rAvgReturn").textContent=pctFmt(avgReturn);
+    $("rMaxDD").textContent=pctFmt(selectedDD*100);
+    $("rLoseStreak").textContent=`${selectedStreak.maxLoss} giao dịch`;
+    $("rWinStreak").textContent=`${selectedStreak.maxWin} giao dịch`;
+    $("rRecovery").textContent=Number.isFinite(recovery)?pctFmt(recovery):"Không giới hạn";
+    $("rSims").textContent=moneyFmt.format(p.sims);
+
+    const qs=[.05,.25,.5,.75,.95].map(q=>quantile(returns,q));
+    ["p5","p25","p50","p75","p95"].forEach((id,i)=>$(id).textContent=pctFmt(qs[i]));
+
+    drawEquity(p,selected);
+    drawDistributions(returns,dds);
+    updateStreakTable(p.winrate);
+    $("status").textContent=`Hoàn tất trong ${Math.round(performance.now()-start)} ms. ${moneyFmt.format(p.sims)} mô phỏng đã được tính.`;
+    $("equityNote").textContent=`Đường cong hiển thị là equity #1. Chuỗi thua dài nhất = ${selectedStreak.maxLoss}; chuỗi thắng dài nhất = ${selectedStreak.maxWin}. Drawdown lớn nhất của equity này = ${pctFmt(selectedDD*100)}.`;
+  }
+
+  function drawEquity(p,path){
+    destroy(equityChart);
+    const labels=path.map((_,i)=>i===0?"Bắt đầu":`GD ${i}`);
+    equityChart=new Chart($("equityChart"),{
+      type:"line",
+      data:{labels,datasets:[{
+        label:"Vốn (VND)",data:path,borderColor:"#4ea1ff",backgroundColor:"rgba(78,161,255,.08)",
+        fill:true,tension:.18,pointRadius:0,borderWidth:2
+      }]},
+      options:{
+        ...chartBaseOptions("VND","Số giao dịch"),
+        plugins:{legend:{labels:{color:"#cbd8e8"}},tooltip:{callbacks:{label:c=>` ${money(c.raw)}`}}},
+        scales:{
+          x:{ticks:{color:"#9fb1c8",maxTicksLimit:12},grid:{color:"rgba(255,255,255,.07)"}},
+          y:{ticks:{color:"#9fb1c8",callback:v=>money(v)},grid:{color:"rgba(255,255,255,.07)"}}
+        }
+      }
+    });
+  }
+
+  function drawRR(){
+    const current=Number($("rr").value)||2;
+    const labels=[], values=[];
+    for(let rr=.25;rr<=10.0001;rr+=.25){labels.push(Number(rr.toFixed(2)));values.push(100/(1+rr));}
+    destroy(rrChart);
+    rrChart=new Chart($("rrChart"),{
+      type:"line",
+      data:{labels,datasets:[
+        {label:"Winrate hòa vốn (%)",data:values,borderColor:"#ff5c6c",backgroundColor:"transparent",pointRadius:0,tension:.2,borderWidth:3},
+        {label:`Winrate hiện tại (${Number($("winrate").value)||0}%)`,data:labels.map(()=>Number($("winrate").value)||0),borderColor:"#4ea1ff",borderDash:[6,5],pointRadius:0,borderWidth:2}
+      ]},
+      options:{
+        ...chartBaseOptions("Winrate (%)","Risk / Reward"),
+        plugins:{legend:{labels:{color:"#cbd8e8"}}},
+        scales:{
+          x:{ticks:{color:"#9fb1c8",maxTicksLimit:12},grid:{color:"rgba(255,255,255,.07)"}},
+          y:{min:0,max:100,ticks:{color:"#9fb1c8",callback:v=>`${v}%`},grid:{color:"rgba(255,255,255,.07)"}}
+        }
+      }
+    });
+  }
+
+  function drawRecovery(){
+    const dds=[5,10,15,20,25,30,40,50,60,70,80,90];
+    const req=dds.map(d=>d/(100-d)*100);
+    destroy(recoveryChart);
+    recoveryChart=new Chart($("recoveryChart"),{
+      type:"line",
+      data:{labels:dds.map(d=>`${d}%`),datasets:[{
+        label:"Lợi nhuận cần để hòa vốn (%)",data:req,borderColor:"#f6c85f",backgroundColor:"rgba(246,200,95,.08)",
+        fill:true,tension:.22,pointRadius:3
+      }]},
+      options:{
+        ...chartBaseOptions("Lợi nhuận cần (%)","Mức lỗ ban đầu"),
+        plugins:{legend:{labels:{color:"#cbd8e8"}},tooltip:{callbacks:{label:c=>` Cần +${numFmt.format(c.raw)}%`}}},
+        scales:{
+          x:{ticks:{color:"#9fb1c8"},grid:{color:"rgba(255,255,255,.07)"}},
+          y:{ticks:{color:"#9fb1c8",callback:v=>`${v}%`},grid:{color:"rgba(255,255,255,.07)"}}
+        }
+      }
+    });
+    const tbody=$("recoveryTable").querySelector("tbody");
+    tbody.innerHTML="";
+    dds.forEach(d=>{
+      const need=d/(100-d)*100, left=100-d;
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${d}%</td><td class="negative">+${numFmt.format(need)}%</td><td>${left}%</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function drawDistributions(returns,dds){
+    const profitBins=binData(returns,18), riskBins=binData(dds,18);
+    destroy(profitDistChart);
+    destroy(riskDistChart);
+    profitDistChart=new Chart($("profitDistChart"),{
+      type:"bar",
+      data:{labels:profitBins.labels,datasets:[{label:"Số mô phỏng",data:profitBins.counts,backgroundColor:"rgba(40,209,124,.55)",borderColor:"#28d17c",borderWidth:1}]},
+      options:{...chartBaseOptions("Số mô phỏng","Lợi nhuận %"),plugins:{legend:{labels:{color:"#cbd8e8"}}},scales:{x:{ticks:{color:"#9fb1c8",maxRotation:55,minRotation:25},grid:{color:"rgba(255,255,255,.07)"}},y:{ticks:{color:"#9fb1c8"},grid:{color:"rgba(255,255,255,.07)"}}}}
+    });
+    riskDistChart=new Chart($("riskDistChart"),{
+      type:"bar",
+      data:{labels:riskBins.labels,datasets:[{label:"Số mô phỏng",data:riskBins.counts,backgroundColor:"rgba(255,92,108,.55)",borderColor:"#ff5c6c",borderWidth:1}]},
+      options:{...chartBaseOptions("Số mô phỏng","Drawdown lớn nhất %"),plugins:{legend:{labels:{color:"#cbd8e8"}}},scales:{x:{ticks:{color:"#9fb1c8",maxRotation:55,minRotation:25},grid:{color:"rgba(255,255,255,.07)"}},y:{ticks:{color:"#9fb1c8"},grid:{color:"rgba(255,255,255,.07)"}}}}
+    });
+  }
+
+  function updateStreakTable(winrate){
+    const tbody=$("streakTable").querySelector("tbody");
+    tbody.innerHTML="";
+    streakReference.forEach(([wr,lossStreak,winStreak])=>{
+      const q=(100-wr)/100, p=wr/100;
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td><span class="pill ${Math.abs(wr-winrate)<=2.5?"green":""}">${wr}%</span></td>
+        <td>${lossStreak}</td>
+        <td>${winStreak}</td>
+        <td>${q===0?"0%":numFmt.format(q**lossStreak*100)}%</td>
+        <td>${p===0?"0%":numFmt.format(p**winStreak*100)}%</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function init(){
+    $("capital").addEventListener("blur",()=>formatMoneyInput($("capital")));
+    $("riskVnd").addEventListener("blur",()=>formatMoneyInput($("riskVnd")));
+    $("capital").addEventListener("input",()=>{
+      $("mRisk").textContent=$("riskMode").value==="fixed"?money(parseMoney($("riskVnd").value)):money(parseMoney($("capital").value)*(Number($("riskPct").value)||0)/100);
+    });
+    $("riskVnd").addEventListener("input",()=>updateBasicMetrics(getInputs()));
+    ["winrate","rr","riskPct","riskMode"].forEach(id=>{
+      $(id).addEventListener("input",()=>{updateBasicMetrics(getInputs());drawRR();});
+      $(id).addEventListener("change",()=>{updateBasicMetrics(getInputs());drawRR();});
+    });
+    $("runBtn").addEventListener("click",runMonteCarlo);
+
+    drawRR();
+    drawRecovery();
+    updateStreakTable(50);
+    updateBasicMetrics(getInputs());
+    runMonteCarlo();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
