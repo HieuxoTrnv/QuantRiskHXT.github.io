@@ -61,8 +61,6 @@ function updateExpectancy(){
   $('rrOut').value=s.rr.toFixed(1)+' : 1';
   $('riskOut').value=(s.risk*100).toFixed(1)+'%';
   updateRRChart(s.rr);
-  updateRecoveryChart();
-  updateRecoveryTable();
   updateStreakTable(s);
   updateStreakChart(s);
 }
@@ -200,49 +198,6 @@ function updateStreakChart(s){
     {label:'Chuỗi thắng',data:win,borderWidth:2,pointRadius:2,tension:.25},
     {label:'Chuỗi thua',data:loss,borderWidth:2,pointRadius:2,tension:.25}]},
     options:{...chartDefaults(),plugins:{legend:{display:true,position:'bottom',labels:{font:{size:9}}}},scales:{x:{title:{display:true,text:'Độ dài chuỗi'}},y:{min:0,max:100,title:{display:true,text:'Xác suất (%)'}}}}});
-}
-function updateRecoveryChart(){
-  destroy('recovery');
-  const drawdowns=[5,10,15,20,25,30,40,50,60,70,80,90];
-  const needed=drawdowns.map(d=>d/(100-d)*100);
-  charts.recovery=new Chart($('recoveryChart'),{
-    type:'line',
-    data:{
-      labels:drawdowns.map(d=>d+'%'),
-      datasets:[{
-        label:'Mức tăng cần thiết',
-        data:needed,
-        borderWidth:2.5,
-        pointRadius:3,
-        tension:.2
-      }]
-    },
-    options:{
-      ...chartDefaults(),
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label:ctx=>` Cần tăng lại: ${ctx.parsed.y.toFixed(2)}%`
-          }
-        }
-      },
-      scales:{
-        x:{title:{display:true,text:'Mức sụt giảm vốn'}},
-        y:{beginAtZero:true,title:{display:true,text:'Mức tăng cần thiết (%)'}}
-      }
-    }
-  });
-}
-
-function updateRecoveryTable(){
-  const drawdowns=[5,10,15,20,25,30,40,50,60,70,80,90];
-  const table=document.getElementById('recoveryTable');
-  if(!table)return;
-  table.innerHTML=drawdowns.map(d=>{
-    const needed=d/(100-d)*100;
-    return `<tr><td>-${d}%</td><td>+${needed.toFixed(2)}%</td><td>${(100-d).toFixed(0)}% vốn còn lại</td></tr>`;
-  }).join('');
 }
 
 function updateDistributions(s,r){
