@@ -16,7 +16,6 @@ Trang web mô phỏng quản lý rủi ro và Monte Carlo, viết bằng HTML/CS
 - Sau khi chạy tự cuộn về biểu đồ mô phỏng.
 - Xác suất xuất hiện chuỗi thắng/thua bằng tính toán xác suất chính xác theo mô hình Bernoulli cho số giao dịch đã chọn.
 - Mối liên hệ Winrate – R/R và Winrate hòa vốn.
-- Khả năng hồi phục vốn sau Drawdown.
 - Phân phối lợi nhuận.
 - Phân phối rủi ro / Drawdown.
 - Liên kết YouTube Hiếu Xoăn Trader, Mở Tài Khoản VPS và Giật Jackpot.
@@ -37,7 +36,6 @@ Không cần backend.
 - Expectancy = Winrate × R/R − Lossrate.
 - Profit Factor lý thuyết = (Winrate × R/R) / Lossrate.
 - Winrate hòa vốn = 1 / (1 + R/R).
-- Hồi phục sau Drawdown D = D / (1 − D).
 
 Monte Carlo dùng risk theo % vốn hiện tại, tức là có compounding. Mỗi lệnh thắng tăng `RiskCash × R/R`; mỗi lệnh thua giảm `RiskCash`.
 
