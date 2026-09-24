@@ -187,21 +187,19 @@
         <h2>Chuỗi thắng/thua, hồi phục vốn và phân phối</h2>
       </div>
     </div>
-
-    <div class="analysis-grid three">
-      <div class="chart-card">
-        <div class="chart-head"><div><h3>Xác suất xuất hiện chuỗi</h3><p>Tính xác suất có ít nhất một chuỗi liên tiếp trong số giao dịch đã chọn.</p></div></div>
-        <div class="chart-wrap"><canvas id="streakChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-head"><div><h3>Khả năng hồi phục vốn</h3><p>Số % cần kiếm lại trên phần vốn còn lại sau Drawdown.</p></div></div>
-        <div class="chart-wrap"><canvas id="recoveryChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-head"><div><h3>Phân phối lợi nhuận</h3><p>Phân phối kết quả cuối của các equity.</p></div></div>
-        <div class="chart-wrap"><canvas id="profitDistChart"></canvas></div>
+    
+    <div class="analysis-grid">
+      <div class="panel table-panel" style="grid-column: 1 / -1;"> <!-- Cho bảng chiếm toàn bộ chiều rộng -->
+        <h3>Bảng khả năng phục hồi vốn</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Thua lỗ / Drawdown</th><th>Cần tăng lại</th><th>Vốn còn lại</th></tr></thead>
+            <tbody id="recoveryTable"></tbody>
+          </table>
+        </div>
       </div>
     </div>
+  </section>
 
     <div class="analysis-grid">
       <div class="chart-card">
