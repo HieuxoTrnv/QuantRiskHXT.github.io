@@ -1,6 +1,6 @@
 # RiskLab Hiếu Xoăn Trader
 
-Trang web mô phỏng quản lý rủi ro và Monte Carlo, viết bằng HTML/CSS/JavaScript thuần, phù hợp triển khai trực tiếp trên GitHub Pages.
+Trang web mô phỏng quản lý rủi ro và Monte Carlo, viết bằng HTML/CSS/JavaScript thuần.
 
 ## Tính năng
 
@@ -21,13 +21,7 @@ Trang web mô phỏng quản lý rủi ro và Monte Carlo, viết bằng HTML/CS
 - Phân phối rủi ro / Drawdown.
 - Liên kết YouTube Hiếu Xoăn Trader, Mở Tài Khoản VPS và Giật Jackpot.
 
-## Cách đưa lên GitHub Pages
-
-1. Tạo repository mới, ví dụ `risklab-hieu-xoan-trader`.
-2. Upload `index.html`, `style.css`, `app.js`.
-3. Vào **Settings → Pages**.
-4. Chọn **Deploy from a branch** → branch `main` → folder `/root`.
-5. Lưu lại và mở URL GitHub Pages.
+ `index.html`, `style.css`, `app.js`.
 
 Không cần backend.
 
