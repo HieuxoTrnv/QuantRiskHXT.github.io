@@ -205,7 +205,7 @@ function updateRecoveryChart(){
   destroy('recovery');
   const drawdowns=[5,10,15,20,25,30,40,50,60,70,80,90];
   const needed=drawdowns.map(d=>d/(100-d)*100);
-  charts.recovery=new Chart($('recoveryChart'),{
+  charts.recovery=new Chart($('recoveryTableChart'),{
     type:'line',
     data:{
       labels:drawdowns.map(d=>d+'%'),
